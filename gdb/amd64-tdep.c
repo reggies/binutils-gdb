@@ -261,6 +261,47 @@ amd64_dwarf_reg_to_regnum (struct gdbarch *gdbarch, int reg)
   return regnum;
 }
 
+static int amd64_dwarf32x64_regmap[] =
+{
+  0, 2, 1, 3,                     /* 0-3   RAX, RDX, RCX, RBX */
+  7,                              /* 4     Stack Pointer Register RSP */
+  6,                              /* 5     Frame Pointer Register RBP */
+  4, 5,                           /* 6-7   RSI, RDI */
+  16,                             /* 8     Return Address RA.  Mapped to RIP */
+  49,                             /* 9     Control and Status Flags Register */
+  -1,                             /* 10    Reserved */
+  33, 34, 35, 36, 37, 38, 39, 40, /* 11-18 Floating Point Registers 0-7 */
+  -1, -1,                         /* 19-20 Reserved */
+  17, 18, 19, 20, 21, 22, 23, 24, /* 21-28 SSE Registers 0 - 7 */
+  41, 42, 43, 44, 45, 46, 47, 48, /* 29-36 MMX Registers 0 - 7 */
+  64,                             /* 39    Floating Point Control Registers */
+  50, 51, 52, 53, 54, 55,         /* 40-45 Selector Registers */
+  -1, -1,                         /* 46-47 Reserved */
+  62,                             /* 48    Task register */
+  63,                             /* 49    LDT register */
+  -1, -1, -1, -1, -1, -1, -1,     /* 50-92 Reserved */
+  -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1,
+  58,                             /* 93    fsbase */
+  59                              /* 94    gsbase */
+};
+
+static const int amd64_dwarf32x64_regmap_len =
+  (sizeof (amd64_dwarf32x64_regmap) / sizeof (amd64_dwarf32x64_regmap[0]));
+
+static int
+amd64_dwarf32_reg_to_regnum (struct gdbarch *gdbarch, int reg)
+{
+  if (reg < 0 || reg >= amd64_dwarf32x64_regmap_len ||
+      amd64_dwarf32x64_regmap[reg] < 0)
+    return -1;
+
+  return amd64_dwarf_reg_to_regnum(gdbarch, amd64_dwarf32x64_regmap[reg]);
+}
+
 /* Map architectural register numbers to gdb register numbers.  */
 
 static const int amd64_arch_regmap[16] =
@@ -3316,6 +3357,7 @@ amd64_x32_init_abi (struct gdbarch_info info, struct gdbarch *gdbarch,
 
   tdep->num_dword_regs = 17;
   set_tdesc_pseudo_register_type (gdbarch, amd64_x32_pseudo_register_type);
+  set_gdbarch_dwarf2_reg_to_regnum (gdbarch, amd64_dwarf32_reg_to_regnum);
 
   set_gdbarch_long_bit (gdbarch, 32);
   set_gdbarch_ptr_bit (gdbarch, 32);
